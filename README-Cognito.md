@@ -1,6 +1,6 @@
 # Installation
 
-## Nuxt3
+## Cognito
 
 ### インストール
 

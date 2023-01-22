@@ -1,10 +1,19 @@
-# Nuxt3 deploy(aws-lambda)
+# Deploy
 
-## 環境構築
+## SSR (aws-lambda)
 
-### nuxt.config.ts
+参考 - https://developer.mamezou-tech.com/nuxt/nuxt3-serverless-deploy/
 
-- 以下のように修正
+1. .output/server を Lambda にデプロイ
+2. .output/public を S3 にデプロイ
+3. cloudfront でアクセス先を振り分け
+
+### 環境構築
+
+#### Nuxt3 を Lambda にデプロイする形式に変更
+
+- nuxt.config.ts
+  - 以下のように変更
 
   ```typescript
   nitro: {
@@ -12,13 +21,7 @@
   }
   ```
 
-- build
-
-  ```bash
-  npm run build
-  ```
-
-### serverless インストール
+#### serverless で Lambda を deploy
 
 - install
 
@@ -28,7 +31,7 @@
 
 - serevrless.yml を以下のように作成
 
-  ```
+  ```yaml
   service: nuxt3-app
   frameworkVersion: '3'
   provider:
@@ -50,20 +53,18 @@
 
   - .serverless を追加
 
-### .output/server deploy (Lambda)
-
 - cloudfront 設定前に一度 Lambda をデプロイ
 
-  ```
+  ```bash
   npm run build
   npx serverless deploy
   ```
 
-## cloudfront と public のデプロイ先 S3 の設定
+#### S3 と CloudFront の設定
 
-- cdn.yml を以下のとおり作成
+- cdn.yml を以下のまま作成
 
-  ```
+  ```yml
   AWSTemplateFormatVersion: "2010-09-09"
   Description: Nuxt3 application distribution template
 
@@ -143,25 +144,24 @@
       Value: !GetAtt NuxtSampleAppDistribution.DomainName
   ```
 
-### cfn 実行
+- S3の名称とLambdaのエンドポイントを指定して deploy
 
-- Lambda のデプロイ先を設定し、S3 を決めて実行
+  - エンドポイントは、serverless の実行結果を参照。
+  - https:// を含めないので注意
 
-  - aws の方は、serverless の実行結果を参照。https:// を含めないので注意
-
-  ```
+  ```bash
   aws cloudformation deploy --template-file cfn.yml --stack-name nuxt-distribution --parameter-overrides "NuxtSsrEngineDomain=********" "NuxtStaticResourceBucket=*********"
   ```
 
-## deploy
+### deploy（2回目以降）
 
-```
+```bash
 npm run build
 npx serverless deploy
 npx aws s3 sync --delete .output/public s3://*******
 ```
 
-## 参考
+### 参考
 
 設定確認
 

@@ -1,10 +1,16 @@
 <script setup lang='ts'>
-const count = ref(0)
 
-onMounted(() => {
-  console.log(process.env.NODE_ENV)
-})
+interface planet {
+  title: string,
+  image: string,
+  description: string,
+  distanceFromSun: string
+}
 
+const config = useRuntimeConfig()
+const { data: planets } = await useFetch<planet[]>(config.API_BASE + '/planets')
+console.log(process.env.NODE_ENV)
+console.log(JSON.stringify(config))
 </script>
 
 <template>
@@ -12,27 +18,18 @@ onMounted(() => {
     <v-main>
       <v-container>
         <v-row>
-          <v-col cols="6">
-            <v-card>
+          <v-col cols="12" sm="6" md="4" lg="3" v-for="item in planets">
+            <v-card height='100%'>
+              <v-img :src="item.image" height="250px" />
               <v-card-title>
-                Sample
+                {{ item.title }}
               </v-card-title>
               <v-card-text>
-                <v-text-field v-model="count" variant="outlined" density="compact" label="Count" />
+                {{ item.description }}
+                <div class="my-4">
+                  {{ item.distanceFromSun }}
+                </div>
               </v-card-text>
-              <v-card-action>
-                <v-btn class="ma-2" color="primary" @click="count++">
-                  <v-icon dark right>
-                    mdi-checkbox-marked-circle
-                  </v-icon>
-                  Accept
-                </v-btn>
-                <v-btn class="ma-2" dark @click="count = 0">
-                  <v-icon dark left>
-                    mdi-minus-circle
-                  </v-icon>Cancel
-                </v-btn>
-              </v-card-action>
             </v-card>
           </v-col>
         </v-row>
