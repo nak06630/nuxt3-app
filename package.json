@@ -15,6 +15,7 @@
     "serverless": "^3.26.0"
   },
   "dependencies": {
+    "@aws-amplify/auth": "^5.1.5",
     "@mdi/font": "^7.1.96",
     "vite-plugin-vuetify": "^1.0.1",
     "vuetify": "^3.1.2"
