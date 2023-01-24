@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { useLoginUser } from '@/composables/state'
 const user = useLoginUser()
-const title = "Nuxt3-app"
+const config = useRuntimeConfig()
 const drawer = ref(true)
 
 const items = computed(() => {
@@ -17,9 +17,9 @@ const items = computed(() => {
     <v-app-bar dark color="primary" app>
       <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer" />
       <v-toolbar-title>
-        {{ title }}
+        {{ config.title }}
       </v-toolbar-title>
-      {{ user.id }}
+      {{ user.name }}
       <v-btn href="./"><v-icon>mdi-logout</v-icon></v-btn>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" permanent app>

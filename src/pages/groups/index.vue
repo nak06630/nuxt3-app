@@ -1,4 +1,7 @@
 <script setup lang='ts'>
+import { useLoginUser } from '@/composables/state'
+const user = useLoginUser()
+const config = useRuntimeConfig()
 
 interface planet {
   title: string,
@@ -7,10 +10,9 @@ interface planet {
   distanceFromSun: string
 }
 
-const config = useRuntimeConfig()
-const { data: planets } = await useFetch<planet[]>(config.API_BASE + '/planets')
-console.log(process.env.NODE_ENV)
-console.log(JSON.stringify(config))
+const { data: planets } = await useFetch<planet[]>(config.API_BASE + '/planets'
+  // , { method: 'get', headers: { authentication: user.value.token } }
+)
 </script>
 
 <template>

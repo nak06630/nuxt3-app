@@ -73,10 +73,10 @@
 
   ```bash
   mkdir src
-  mkdir src/assets
   mkdir src/components
   mkdir src/composables
   mkdir src/layouts
+  mkdir src/middleware
   mkdir src/pages
   mkdir src/plugins
   mkdir src/public
@@ -179,9 +179,6 @@
 
   const { data: planets } = await useFetch<planet[]>('https://api.nuxtjs.dev/planets')
 
-  onMounted(() => {
-    console.log(process.env.NODE_ENV)
-  })
   </script>
 
   <template>
@@ -259,7 +256,7 @@ npm run dev
 
 - テンプレートファイルを作成
 
-  - cognito_template.yml参照
+  - cognito_template.yml 参照
 
 - cfnでデプロイ
 
@@ -275,29 +272,44 @@ npm run dev
   - ユーザー情報を持ちまわれるようになる（vuex/pinia相当）
   
   ```typescript
-  interface User { id: string; password: string }
+  interface User { username: string; name: string, email: string, token: string }
   export const useLoginUser = () =>
     useState<User>("login-user", () => {
-      console.log("retrieving user info...")
+      // console.log("retrieving user info...")
       return {
-        id: "",
-        password: "",
+        username: '',
+        name: '',
+        email: '',
+        token: ''
       }
     })
   ```
 
 ### Cognitoの設定値を登録する。
 
-- /aws-exports.ts
+- /.env
 
   - congitoの設定を入れる。
 
   ```
-  export default {
-    userPoolId: '************************',
-    userPoolWebClientId: '**************************',
-    region: '**************'
-  }
+  title=Nuxt3-app
+  userPoolId=************************
+  userPoolWebClientId=**************************
+  region=**************
+  ```
+
+  - nuxt.config.ts
+
+  ```
+  export default defineNuxtConfig({
+  srcDir: 'src/',
+  runtimeConfig: {
+    public: {
+      API_BASE: 'https://api.nuxtjs.dev',
+      userPoolId: process.env.userPoolId,
+      userPoolWebClientId: process.env.userPoolWebClientId,
+      region: process.env.region
+    }
   ```
 
 - src/middleware/auth.global.ts
@@ -312,14 +324,17 @@ npm run dev
     if (to.path == '/logout') {
       await Auth.signOut()
       return navigateTo('/login')
-    } else {
-      try {
-        const currentAuthUser = await Auth.currentAuthenticatedUser()
-        console.log("middleware", currentAuthUser)
-      } catch (error) {
-        if (to.path != '/login') {
-          return navigateTo('/login')
-        }
+    }
+
+    try {
+      const currentAuthUser = await Auth.currentAuthenticatedUser()
+      const session = await Auth.userSession(currentAuthUser)
+      if (!session?.isValid()) {
+        return navigateTo('/login')
+      }
+    } catch (error) {
+      if (to.path != '/login') {
+        return navigateTo('/login')
       }
     }
   })
@@ -333,7 +348,7 @@ npm run dev
   <script setup lang='ts'>
   import { useLoginUser } from '@/composables/state'
   const user = useLoginUser()
-  const title = "Nuxt3-app"
+  const config = useRuntimeConfig()
   const drawer = ref(true)
 
   const items = computed(() => {
@@ -349,9 +364,9 @@ npm run dev
       <v-app-bar dark color="primary" app>
         <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer" />
         <v-toolbar-title>
-          {{ title }}
+          {{ config.title }}
         </v-toolbar-title>
-        {{ user.id }}
+        {{ user.name }}
         <v-btn href="./"><v-icon>mdi-logout</v-icon></v-btn>
       </v-app-bar>
       <v-navigation-drawer v-model="drawer" permanent app>
@@ -390,19 +405,22 @@ npm run dev
   ```vue
   <script setup lang='ts'>
   import { Auth } from '@aws-amplify/auth'
-  import awsconfig from '@/../aws-exports'
   import { useLoginUser } from '@/composables/state'
 
   definePageMeta({
     layout: "login",
-  })
-
-  Auth.configure(awsconfig)
+  });
 
   const user = useLoginUser()
-  const valid = ref(false)
-  const alert = ref(false)
-  const error = ref('')
+  const state = reactive({
+    id: '',
+    password: '',
+    valid: false,
+    alert: false,
+    error: '' as string,
+    loading: false
+  })
+
   const Rules = {
     id: [
       (v: boolean) => !!v || 'メールアドレスを入力してください',
@@ -422,17 +440,22 @@ npm run dev
 
   const clickSignIn = async () => {
     try {
-      await Auth.signIn(user.value.id, user.value.password)
+      const authUser = await Auth.signIn(state.id, state.password)
+      const idToken = authUser.signInUserSession.idToken
+      user.value.username = idToken.payload['cognito:username']
+      user.value.name = idToken.payload.name
+      user.value.email = idToken.payload.email
+      user.value.token = idToken.jwtToken
       navigateTo('/groups/')
     } catch (err: any) {
-      alert.value = true
+      state.alert = true
       if (err && err.message) {
         if (err.message == 'Incorrect username or password.' || err.message == 'User does not exist.') {
-          error.value = 'ユーザIDまたはパスワードが正しくありません。'
+          state.error = 'ユーザIDまたはパスワードが正しくありません。'
         } else if (err.message == 'Password attempts exceeded') {
-          error.value = 'パスワード試行回数が上限を超えました。'
+          state.error = 'パスワード試行回数が上限を超えました。'
         } else {
-          error.value = err.message
+          state.error = err.message
         }
       }
     }
@@ -444,20 +467,20 @@ npm run dev
       <v-row justify="center">
         <v-col>
           <v-card max-width="600" class="mx-auto my-8">
-            <v-alert type="error" v-model="alert" closable>{{ error }}</v-alert>
+            <v-alert type="error" v-model="state.alert" closable>{{ state.error }}</v-alert>
             <v-card-title class="font-weight-bold mb-4">ログイン</v-card-title>
-            <v-form v-model="valid">
+            <v-form v-model="state.valid">
               <v-card-text>
                 <p class="font-weight-bold">ユーザー名:</p>
-                <v-text-field v-model="user.id" variant="outlined" density="compact" :rules="Rules.id"
+                <v-text-field v-model="state.id" variant="outlined" density="compact" :rules="Rules.id"
                   autocomplete="off" />
                 <p class="font-weight-bold">パスワード:</p>
-                <v-text-field v-model="user.password" variant="outlined" density="compact" type="password"
+                <v-text-field v-model="state.password" variant="outlined" density="compact" type="password"
                   :rules="Rules.password" autocomplete="new-password" />
               </v-card-text>
               <v-card-actions>
                 <v-spacer />
-                <v-btn block variant="elevated" :disabled="!valid" color="primary" @click="clickSignIn">ログイン</v-btn>
+                <v-btn block variant="elevated" :disabled="!state.valid" color="primary" @click="clickSignIn">ログイン</v-btn>
               </v-card-actions>
             </v-form>
           </v-card>
@@ -465,6 +488,7 @@ npm run dev
       </v-row>
     </v-container>
   </template>
+
   ```
 
 - src/pages/groups/index.vue

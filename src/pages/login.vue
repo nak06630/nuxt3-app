@@ -1,18 +1,21 @@
 <script setup lang='ts'>
 import { Auth } from '@aws-amplify/auth'
-import awsconfig from '@/../aws-exports'
 import { useLoginUser } from '@/composables/state'
 
 definePageMeta({
   layout: "login",
 });
 
-Auth.configure(awsconfig)
-
 const user = useLoginUser()
-const valid = ref(false)
-const alert = ref(false)
-const error = ref('')
+const state = reactive({
+  id: '',
+  password: '',
+  valid: false,
+  alert: false,
+  error: '' as string,
+  loading: false
+})
+
 const Rules = {
   id: [
     (v: boolean) => !!v || 'メールアドレスを入力してください',
@@ -32,17 +35,26 @@ const Rules = {
 
 const clickSignIn = async () => {
   try {
-    await Auth.signIn(user.value.id, user.value.password)
+    state.loading = true
+    const authUser = await Auth.signIn(state.id, state.password)
+    state.loading = false
+
+    const idToken = authUser.signInUserSession.idToken
+    user.value.username = idToken.payload['cognito:username']
+    user.value.name = idToken.payload.name
+    user.value.email = idToken.payload.email
+    user.value.token = idToken.jwtToken
     navigateTo('/groups/')
   } catch (err: any) {
-    alert.value = true
+    state.alert = true
+    state.loading = false
     if (err && err.message) {
       if (err.message == 'Incorrect username or password.' || err.message == 'User does not exist.') {
-        error.value = 'ユーザIDまたはパスワードが正しくありません。'
+        state.error = 'ユーザIDまたはパスワードが正しくありません。'
       } else if (err.message == 'Password attempts exceeded') {
-        error.value = 'パスワード試行回数が上限を超えました。'
+        state.error = 'パスワード試行回数が上限を超えました。'
       } else {
-        error.value = err.message
+        state.error = err.message
       }
     }
   }
@@ -54,20 +66,21 @@ const clickSignIn = async () => {
     <v-row justify="center">
       <v-col>
         <v-card max-width="600" class="mx-auto my-8">
-          <v-alert type="error" v-model="alert" closable>{{ error }}</v-alert>
+          <v-alert type="error" v-model="state.alert" closable>{{ state.error }}</v-alert>
           <v-card-title class="font-weight-bold mb-4">ログイン</v-card-title>
-          <v-form v-model="valid">
+          <v-form v-model="state.valid">
             <v-card-text>
               <p class="font-weight-bold">ユーザー名:</p>
-              <v-text-field v-model="user.id" variant="outlined" density="compact" :rules="Rules.id"
+              <v-text-field v-model="state.id" variant="outlined" density="compact" :rules="Rules.id"
                 autocomplete="off" />
               <p class="font-weight-bold">パスワード:</p>
-              <v-text-field v-model="user.password" variant="outlined" density="compact" type="password"
+              <v-text-field v-model="state.password" variant="outlined" density="compact" type="password"
                 :rules="Rules.password" autocomplete="new-password" />
             </v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn block variant="elevated" :disabled="!valid" color="primary" @click="clickSignIn">ログイン</v-btn>
+              <v-btn block variant="elevated" :disabled="!state.valid" :loading="state.loading" color="primary"
+                @click="clickSignIn">ログイン</v-btn>
             </v-card-actions>
           </v-form>
         </v-card>

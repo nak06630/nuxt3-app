@@ -1,10 +1,12 @@
-interface User { id: string; password: string }
+interface User { username: string; name: string, email: string, token: string }
 export const useLoginUser = () =>
   useState<User>("login-user", () => {
-    console.log("retrieving user info...")
+    // console.log("retrieving user info...")
     return {
-      id: "",
-      password: "",
+      username: '',
+      name: '',
+      email: '',
+      token: ''
     }
   })
 

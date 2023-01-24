@@ -4,11 +4,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Private config that is only available on the server
     PRIVATE_KEY: 'secret',
-    HOGE: process.env.HOGE,
     // Config within public will be also exposed to the client
     public: {
       API_BASE: 'https://api.nuxtjs.dev',
-      FUGA: process.env.FUGA,
+      userPoolId: process.env.userPoolId,
+      userPoolWebClientId: process.env.userPoolWebClientId,
+      region: process.env.region,
       PUBLIC_KEY: 'public'
     }
   },
