@@ -1,12 +1,31 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+# aws cloudformation deploy --template-file template-cognito.yml --stack-name nuxt3-app-cognito
+# aws cloudformation delete
+
+Description: The AWS CloudFormation template for cognito
+
+Parameters:
+  ParamUserPoolName:
+    Type: String
+    Default: nuxt3-app-cognito
+    Description: UserPoolName
+  ParamUserPoolClientName:
+    Type: String
+    Default: nuxt3-app-cognito-client
+    Description: UserPoolClientName
+  ParamUserPoolSecretClientName:
+    Type: String
+    Default: nuxt3-app-cognito-secret-client
+    Description: UserPoolSecretClientName
+
 Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: NCognitoUserPool    # PoolName
+      UserPoolName: !Ref ParamUserPoolName
       UsernameConfiguration:
-        CaseSensitive: true             # ユーザー名で大文字、小文字を区別する
+        CaseSensitive: true
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
@@ -14,7 +33,7 @@ Resources:
       Policies:
         PasswordPolicy:
           MinimumLength: 8
-          RequireLowercase: true
+          RequireLowercase: false
           RequireUppercase: true
           RequireNumbers: true
           RequireSymbols: true
@@ -36,14 +55,6 @@ Resources:
           DeveloperOnlyAttribute: false
           Mutable: true
           Required: false
-        - Name: belong_to
-          AttributeDataType: String
-          DeveloperOnlyAttribute: false
-          Mutable: true
-          Required: false
-          StringAttributeConstraints:
-            MinLength: 1
-            MaxLength: 2048
       EnabledMfas:
         - SOFTWARE_TOKEN_MFA
       MfaConfiguration: OPTIONAL
@@ -51,7 +62,7 @@ Resources:
         AllowAdminCreateUserOnly: false
         UnusedAccountValidityDays: 7
       DeviceConfiguration:
-        ChallengeRequiredOnNewDevice: true
+        ChallengeRequiredOnNewDevice: false
         DeviceOnlyRememberedOnUserPrompt: false
 
   AdminGroup:
@@ -69,8 +80,30 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: NCognitoUserPoolClient  #ClientName
+      ClientName: !Ref ParamUserPoolClientName
       GenerateSecret: false
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      RefreshTokenValidity: 30
+      AccessTokenValidity: 720
+      IdTokenValidity: 720
+      UserPoolId: !Ref UserPool
+      ReadAttributes:
+        - email
+        - name
+        - phone_number
+      WriteAttributes:
+        - email
+        - name
+        - phone_number
+
+  UserPoolSecretClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Ref ParamUserPoolSecretClientName
+      GenerateSecret: true
       TokenValidityUnits:
         RefreshToken: days
         AccessToken: minutes
