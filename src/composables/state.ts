@@ -4,7 +4,6 @@ interface User {
   email: string
   phone_number: string
   token: string
-  authUser: object
   sub: string
   'cognito:username': string
   'cognito:groups': string[]
@@ -23,7 +22,6 @@ export const useLoginUser = () =>
       email: '',
       phone_number: '',
       token: '',
-      authUser: {},
       sub: '',
       'cognito:username': '',
       'cognito:groups': [],
