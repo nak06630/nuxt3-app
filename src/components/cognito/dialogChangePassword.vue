@@ -44,7 +44,10 @@ const closeDialog = () => {
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
     <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.valid" @submit.prevent="">
-        <v-card-title class="headline font-weight-bold mb-4">パスワード変更</v-card-title>
+        <v-card-title class="headline font-weight-bold mb-4">
+          <v-icon color="primary">mdi-lock</v-icon>
+          パスワード変更
+        </v-card-title>
         <v-card-subtitle>
           パスワードを変更します。
         </v-card-subtitle>

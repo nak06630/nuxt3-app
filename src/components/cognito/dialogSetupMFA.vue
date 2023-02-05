@@ -69,9 +69,9 @@ const closeDialog = () => {
           MFA設定
         </v-card-title>
         <v-card-subtitle>
-          MFAを設定します。
+          MFAを設定します。<br /><br />
           Google Authenticator等で、QRコードをスキャンしてください。<br />
-          そのあと、検証のために表示されているトークンを1度入力してください。
+          そのあと表示されているトークンを入力してください。
         </v-card-subtitle>
         <v-card-text>
           <vue-qrcode :value="state.qrcode" :options="options" />
@@ -80,7 +80,7 @@ const closeDialog = () => {
           <div class="font-weight-bold">トークン:</div>
           <v-text-field v-model="state.token" variant="outlined" density="compact"
             :rules="Validation.confirmationCode" />
-          <v-checkbox v-model="state.mfaEnable" density="compact" label="MFAを有効にする" />
+          <v-checkbox v-model="state.mfaEnable" color="primary" density="compact" label="MFAを有効にする" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
