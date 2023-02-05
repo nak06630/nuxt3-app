@@ -19,7 +19,9 @@ const items = computed(() => {
       <v-toolbar-title>
         {{ config.title }}
       </v-toolbar-title>
-      {{ user.name }}
+      <v-btn to='/accounts/'>
+        {{ user.name }}
+      </v-btn>
       <v-btn href="./"><v-icon>mdi-logout</v-icon></v-btn>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" permanent app>

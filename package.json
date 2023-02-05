@@ -10,13 +10,18 @@
   "devDependencies": {
     "@nuxt/eslint-config": "^0.1.1",
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
+    "@types/google-libphonenumber": "^7.4.23",
     "eslint": "^8.33.0",
     "nuxt": "^3.1.2",
     "serverless": "^3.27.0"
   },
   "dependencies": {
     "@aws-amplify/auth": "^5.1.6",
+    "@chenfengyuan/vue-qrcode": "^2.0.0-rc.1",
     "@mdi/font": "^7.1.96",
+    "date-fns": "^2.29.3",
+    "google-libphonenumber": "^3.2.32",
+    "qrcode": "^1.5.1",
     "vite-plugin-vuetify": "^1.0.2",
     "vuetify": "^3.1.2"
   }

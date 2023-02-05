@@ -1,4 +1,19 @@
-interface User { username: string; name: string, email: string, token: string }
+interface User {
+  username: string
+  name: string
+  email: string
+  phone_number: string
+  token: string
+  authUser: object
+  sub: string
+  'cognito:username': string
+  'cognito:groups': string[]
+  mfa: string
+  iat: number
+  exp: number
+  auth_time: number
+}
+
 export const useLoginUser = () =>
   useState<User>("login-user", () => {
     // console.log("retrieving user info...")
@@ -6,7 +21,16 @@ export const useLoginUser = () =>
       username: '',
       name: '',
       email: '',
-      token: ''
+      phone_number: '',
+      token: '',
+      authUser: {},
+      sub: '',
+      'cognito:username': '',
+      'cognito:groups': [],
+      mfa: '',
+      iat: 0,
+      exp: 0,
+      auth_time: 0,
     }
   })
 
