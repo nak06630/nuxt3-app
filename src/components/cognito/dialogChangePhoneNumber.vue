@@ -9,10 +9,10 @@ const emits = defineEmits<{
 
 const user = useLoginUser()
 const state = reactive({
-  valid: false,
   alert: false,
   error: '',
-  phone_number: ''
+  phone_number: '',
+  valid: false
 })
 
 const getPhoneNumberJP = (phone_number: string) => {
@@ -36,6 +36,7 @@ onMounted(async () => {
 })
 
 const clickChangePhoneNumber = async () => {
+  state.alert = false
   if (!isValidPhoneNumber(state.phone_number)) {
     state.alert = true
     state.error = '電話番号の形式が不正です。'
@@ -45,7 +46,6 @@ const clickChangePhoneNumber = async () => {
     const authUser = await Auth.currentAuthenticatedUser()
     await Auth.updateUserAttributes(authUser, { phone_number: getPhoneNumberE164(state.phone_number) })
     user.value.phone_number = getPhoneNumberJP(state.phone_number)
-    state.alert = false
     emits('close')
   } catch (e) {
     state.alert = true
@@ -61,7 +61,7 @@ const closeDialog = () => {
 <template>
   <v-dialog>
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
-    <v-card min-width="500">
+    <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.valid" @submit.prevent="">
         <v-card-title class="headline font-weight-bold mb-4">
           <v-icon color="primary">mdi-phone</v-icon>
@@ -77,7 +77,8 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.valid" color="success" @click="clickChangePhoneNumber">変更</v-btn>
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.valid" color="primary"
+            @click="clickChangePhoneNumber">変更</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>

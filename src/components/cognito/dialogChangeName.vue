@@ -8,10 +8,10 @@ const emits = defineEmits<{
 
 const user = useLoginUser()
 const state = reactive({
-  valid: false,
   alert: false,
   error: '',
-  name: ''
+  name: '',
+  valid: false
 })
 
 onMounted(async () => {
@@ -19,10 +19,10 @@ onMounted(async () => {
 })
 
 const clickChangeName = async () => {
+  state.alert = false
   try {
     const authUser = await Auth.currentAuthenticatedUser()
     await Auth.updateUserAttributes(authUser, { name: state.name })
-    state.alert = false
     user.value.name = state.name
     emits('close')
   } catch (e) {
@@ -39,7 +39,7 @@ const closeDialog = () => {
 <template>
   <v-dialog>
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
-    <v-card min-width="500">
+    <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.valid" @submit.prevent="">
         <v-card-title class="headline font-weight-bold mb-4">
           <v-icon color="primary">mdi-account-cog</v-icon>
@@ -55,7 +55,8 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.valid" color="success" @click="clickChangeName">変更</v-btn>
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.valid" color="primary"
+            @click="clickChangeName">変更</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>

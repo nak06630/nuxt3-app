@@ -8,13 +8,13 @@ const emits = defineEmits<{
 
 const user = useLoginUser()
 const state = reactive({
-  email: '',
-  confirmationCode: '',
-  email_valid: false,
-  code_valid: false,
   alert: false,
   error: '',
+  email: '',
+  email_valid: false,
   confirm: false,
+  confirmationCode: '',
+  code_valid: false,
 })
 
 onMounted(async () => {
@@ -22,10 +22,10 @@ onMounted(async () => {
 })
 
 const clickChangeEmail = async () => {
+  state.alert = false
   try {
     const authUser = await Auth.currentAuthenticatedUser()
     await Auth.updateUserAttributes(authUser, { email: state.email })
-    state.alert = false
     state.confirm = true
   } catch (e) {
     state.alert = true
@@ -34,9 +34,9 @@ const clickChangeEmail = async () => {
 }
 
 const clickConfirmationCode = async () => {
+  state.alert = false
   try {
     await Auth.verifyCurrentUserAttributeSubmit('email', state.confirmationCode)
-    state.alert = false
     user.value.email = state.email
     emits('close')
   } catch (e) {
@@ -54,7 +54,7 @@ const closeDialog = () => {
   <v-dialog>
     <v-alert type="info" v-model="state.confirm" closable>検証コードを送信しました。</v-alert>
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
-    <v-card min-width="500">
+    <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.email_valid" @submit.prevent="">
         <v-card-title class="headline font-weight-bold mb-4">
           <v-icon color="primary">mdi-mail</v-icon>
@@ -71,7 +71,8 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.email_valid" color="success" @click="clickChangeEmail">検証コードを送信</v-btn>
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.email_valid" color="primary"
+            @click="clickChangeEmail">検証コードを送信</v-btn>
         </v-card-actions>
       </v-form>
 
@@ -89,7 +90,8 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.code_valid" color="success" @click="clickConfirmationCode">変更</v-btn>
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.code_valid" color="primary"
+            @click="clickConfirmationCode">変更</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>

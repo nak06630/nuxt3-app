@@ -25,10 +25,6 @@ export const Validation = {
   confirmationCode: [
     (v: string) => /^[0-9]{6}$/.test(v) || '検証コードを入力してください',
   ],
-  gppw: [
-    (v: boolean) => !!v || 'グループパスワードを入力してください',
-    (v: string) => v.length <= 32 || 'グループパスワードを入力してください',
-  ],
   any: [
     (v: boolean) => !!v || '入力してください',
   ]

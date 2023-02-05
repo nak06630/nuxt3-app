@@ -8,12 +8,12 @@ const emits = defineEmits<{
 }>()
 
 const state = reactive({
-  valid: false,
   alert: false,
   error: '',
   qrcode: 'dummy',
   token: '',
-  mfaEnable: true
+  mfaEnable: true,
+  valid: false
 })
 
 const options = {
@@ -38,6 +38,7 @@ onMounted(async () => {
 })
 
 const submit = async () => {
+  state.alert = false
   try {
     const authUser = await Auth.currentAuthenticatedUser()
     await Auth.verifyTotpToken(authUser, state.token)
@@ -46,7 +47,6 @@ const submit = async () => {
     } else {
       await Auth.setPreferredMFA(authUser, 'NOMFA')
     }
-    state.alert = false
     emits('close')
   } catch (e) {
     state.alert = true
@@ -62,7 +62,7 @@ const closeDialog = () => {
 <template>
   <v-dialog>
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
-    <v-card min-width="500">
+    <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.valid" @submit.prevent="">
         <v-card-title class="headline font-weight-bold mb-4">
           <v-icon color="primary">mdi-lock</v-icon>
@@ -85,7 +85,7 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.valid" color="success" @click="submit">設定</v-btn>
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.valid" color="primary" @click="submit">設定</v-btn>
         </v-card-actions>
       </v-form>
     </v-card>

@@ -4,7 +4,7 @@ import { useLoginUser } from '@/composables/state'
 
 definePageMeta({
   layout: "login",
-});
+})
 
 const authUser = ref<any>()
 const user = useLoginUser()
@@ -24,11 +24,11 @@ const state = reactive({
 
 const clickSignIn = async () => {
   state.loading = true
+  state.alert = false
   try {
     authUser.value = await Auth.signIn(state.email, state.password)
     if (authUser.value.challengeName === 'SOFTWARE_TOKEN_MFA') {
       // mfa (1/2)
-      state.alert = false
       state.SOFTWARE_TOKEN_MFA = true
     } else if (authUser.value.signInUserSession) {
       // login
@@ -37,7 +37,9 @@ const clickSignIn = async () => {
       user.value.token = idToken.jwtToken
       navigateTo('/groups/')
     } else {
-      console.log("NEW_PASSWORD_REQUIRED not Supported.", authUser)
+      state.alert = true
+      state.error = 'NEW_PASSWORD_REQUIRED not Supported.'
+      console.log(authUser)
     }
   } catch (e) {
     state.alert = true
@@ -49,6 +51,7 @@ const clickSignIn = async () => {
 // mfa (2/2)
 const confirmSignIn = async () => {
   state.loading = true
+  state.alert = false
   try {
     await Auth.confirmSignIn(authUser.value, state.code, 'SOFTWARE_TOKEN_MFA')
     navigateTo('/groups/')
@@ -65,7 +68,7 @@ const confirmSignIn = async () => {
   <v-container>
     <v-row justify="center">
       <v-col>
-        <v-card max-width="600" class="mx-auto my-8">
+        <v-card width="500" class="mx-auto my-8">
           <v-alert type="error" v-model="state.alert" closable>{{ state.error }}</v-alert>
           <v-card-title class="font-weight-bold mb-4">ログイン</v-card-title>
           <v-form v-model="state.valid">
@@ -79,36 +82,35 @@ const confirmSignIn = async () => {
             </v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn block variant="elevated" :disabled="!state.valid" :loading="state.loading" color="primary"
+              <v-btn block variant="elevated" :disabled="!state.valid" color="primary" :loading="state.loading"
                 @click="clickSignIn">ログイン</v-btn>
             </v-card-actions>
             <v-card-text>
-              <NuxtLink to='/login/signup'>新規アカウント作成</NuxtLink>
-              <NuxtLink to='/login/forgotpassword'>パスワード忘れ</NuxtLink>
+              <NuxtLink to='/login/signup'>新規ユーザーアカウント作成</NuxtLink><br />
+              パスワードを忘れた場合は<NuxtLink to='/login/forgotpassword'>こちら</NuxtLink>
             </v-card-text>
           </v-form>
         </v-card>
       </v-col>
     </v-row>
     <v-dialog v-model="state.SOFTWARE_TOKEN_MFA" justify="center">
-      <v-col>
-        <v-card max-width="500" class="mx-auto my-8">
-          <v-alert type="error" v-model="state.alert" closable>{{ state.error }}</v-alert>
-          <v-card-title class="font-weight-bold mb-4">MFA</v-card-title>
-          <v-form v-model="state.valid2">
-            <v-card-text>
-              <p class="font-weight-bold">検証コード:</p>
-              <v-text-field v-model="state.code" variant="outlined" density="compact" type="password"
-                :rules="Validation.confirmationCode" />
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn variant="elevated" :disabled="!state.valid2" color="primary" @click="confirmSignIn">ログイン</v-btn>
-              <v-btn @click="state.SOFTWARE_TOKEN_MFA = false">キャンセル</v-btn>
-            </v-card-actions>
-          </v-form>
-        </v-card>
-      </v-col>
+      <v-card width="500" class="mx-auto my-8">
+        <v-alert type="error" v-model="state.alert" closable>{{ state.error }}</v-alert>
+        <v-card-title class="font-weight-bold mb-4">MFA</v-card-title>
+        <v-form v-model="state.valid2">
+          <v-card-text>
+            <p class="font-weight-bold">検証コード:</p>
+            <v-text-field v-model="state.code" variant="outlined" density="compact" type="password"
+              :rules="Validation.confirmationCode" />
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="elevated" :disabled="!state.valid2" color="primary" :loading="state.loading"
+              @click="confirmSignIn">ログイン</v-btn>
+            <v-btn @click="state.SOFTWARE_TOKEN_MFA = false">キャンセル</v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
     </v-dialog>
   </v-container>
 </template>

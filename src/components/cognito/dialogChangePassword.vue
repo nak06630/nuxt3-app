@@ -6,16 +6,17 @@ const emits = defineEmits<{
 }>()
 
 const state = reactive({
-  valid: false,
-  success: false,
   alert: false,
+  success: false,
   error: '',
   oldpassword: '',
   password: '',
   passwordConfirm: '',
+  valid: false,
 })
 
 const clickChangePassword = async () => {
+  state.alert = false
   if (state.password != state.passwordConfirm) {
     state.alert = true
     state.error = '確認用のパスワードが一致しません。'
@@ -24,7 +25,6 @@ const clickChangePassword = async () => {
   try {
     const user = await Auth.currentAuthenticatedUser()
     await Auth.changePassword(user, state.oldpassword, state.password)
-    state.alert = false
     state.success = true
     emits('close')
   } catch (e) {
@@ -42,7 +42,7 @@ const closeDialog = () => {
   <v-dialog>
     <v-alert type="success" v-model="state.success" closable>パスワードを変更しました。</v-alert>
     <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
-    <v-card min-width="500">
+    <v-card width="500" class="mx-auto my-8">
       <v-form v-model="state.valid" @submit.prevent="">
         <v-card-title class="headline font-weight-bold mb-4">パスワード変更</v-card-title>
         <v-card-subtitle>
@@ -62,7 +62,7 @@ const closeDialog = () => {
         <v-card-actions>
           <v-spacer />
           <v-btn class="mr-1" @click="closeDialog">キャンセル</v-btn>
-          <v-btn class="mr-1" :disabled="!state.valid && !state.success" color="primary"
+          <v-btn class="mr-1" variant="elevated" :disabled="!state.valid && !state.success" color="primary"
             @click="clickChangePassword">変更</v-btn>
         </v-card-actions>
       </v-form>

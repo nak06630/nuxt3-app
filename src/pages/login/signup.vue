@@ -4,9 +4,10 @@ import { PhoneNumberUtil, PhoneNumberFormat } from 'google-libphonenumber'
 
 definePageMeta({
   layout: "login",
-});
+})
 
 const state = reactive({
+  loading: false,
   valid: false,
   confirm: false,
   //username: '',
@@ -32,27 +33,30 @@ const isValidPhoneNumber = (phone_number: string) => {
 }
 
 const clickSignUp = async () => {
-  state.alert = false
   if (!isValidPhoneNumber(state.phone_number)) {
     state.alert = true
     state.error = '電話番号の形式が不正です。'
     return
   }
+  state.loading = true
+  state.alert = false
   try {
     await Auth.signUp({
       username: state.email, password: state.password, attributes: {
         email: state.email, phone_number: getPhoneNumberE164(state.phone_number), name: state.name
       }
     })
-    state.alert = false
     state.confirm = true
   } catch (e) {
     state.alert = true
     state.error = getCognitoError(e)
   }
+  state.loading = false
 }
 
 async function confirmSignUp() {
+  state.loading = true
+  state.alert = false
   try {
     await Auth.confirmSignUp(state.email, state.confirmationCode)
     navigateTo('/login/')
@@ -60,6 +64,7 @@ async function confirmSignUp() {
     state.alert = true
     state.error = getCognitoError(e)
   }
+  state.loading = false
 }
 </script>
 
@@ -67,14 +72,10 @@ async function confirmSignUp() {
   <v-container>
     <v-row justify="center">
       <v-col>
-        <v-card max-width="500px" class="mx-auto my-8">
+        <v-card width="500" class="mx-auto my-8">
           <v-alert type="info" v-model="state.confirm" closable>検証コードを送信しました。</v-alert>
           <v-alert type="error" v-model="state.alert" closable> {{ state.error }}</v-alert>
           <v-card-title class="headline font-weight-bold mb-4">ユーザー登録</v-card-title>
-          <v-card-subtitle>
-            ユーザー名は自己サインアップではメールアドレス形式のみです。<br />
-            ※ belong_to は自己サインアップでは設定できません。
-          </v-card-subtitle>
           <v-form v-model="state.valid">
             <v-card-text>
               <div class="font-weight-bold">ユーザー名（メールアドレス）:</div>
@@ -93,12 +94,13 @@ async function confirmSignUp() {
             <v-card-actions>
               <v-spacer />
               <v-btn class="mr-1" to="/login">キャンセル</v-btn>
-              <v-btn class="mr-1" :disabled="!state.valid" color="success" @click="clickSignUp">検証コードを送信</v-btn>
+              <v-btn class="mr-1" variant="elevated" :disabled="!state.valid" color="primary" :loading="state.loading"
+                @click="clickSignUp">検証コードを送信</v-btn>
             </v-card-actions>
           </v-form>
+        </v-card>
 
-          <v-divider />
-
+        <v-card width="500" class="mx-auto my-8">
           <v-card-subtitle class="mt-4">
             メールで受信した6桁の検証コードを入力してください。
           </v-card-subtitle>
@@ -110,7 +112,8 @@ async function confirmSignUp() {
           <v-card-actions>
             <v-spacer />
             <v-btn class="mr-1" to="/login">キャンセル</v-btn>
-            <v-btn class="mr-1" color="success" @click="confirmSignUp">登録</v-btn>
+            <v-btn class="mr-1" variant="elevated" color="primary" :loading="state.loading"
+              @click="confirmSignUp">登録</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
