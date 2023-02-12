@@ -1,7 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src/',
-  ssr: true,
+  ssr: false,
+  //  ssr: true,
   runtimeConfig: {
     // Private config that is only available on the server
     PRIVATE_KEY: 'secret',
