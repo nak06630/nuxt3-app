@@ -5,9 +5,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   // console.log("[plugins/cognito] process.env:", process.env)
   // console.log("[plugins/cognito] config:", config)
   Auth.configure({
-    userPoolId: config.userPoolId,
-    userPoolWebClientId: config.userPoolWebClientId,
-    region: config.region
+    userPoolId: config.NUXT_USER_POOL_ID,
+    userPoolWebClientId: config.NUXT_USER_POOL_WEB_CLIENT_ID,
+    region: 'ap-northeast-1'
+
   })
 })
 

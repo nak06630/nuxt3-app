@@ -8,5 +8,8 @@ node_modules
 .serverless
 dist
 
+# local env files
+.env*.local
+
 .venv
 venv
